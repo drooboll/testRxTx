@@ -1,11 +1,13 @@
-# tesRxTx
+## Test remote control
+
+# How to use
 
 - Put *boot.py* & *translink.py* to ESP8266 (actually unnecessary)
 - Load *receiver.ino* to Arduino
 - connect Pin 45 on Arduino to IO2 on ESP8266
-- Load joystick.py to computer
-- Connect computer via Wi-Fi to AP *VSB* with pass *12121212* (4x 12)
-- run joystick.py
+- Load *joystick.py* to computer
+- Connect computer via Wi-Fi to AP *"VSB"* with pass *"12121212"* (4x 12)
+- run *joystick.py*
 
 # Bugs and how to avoid them
 
