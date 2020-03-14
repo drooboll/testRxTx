@@ -9,6 +9,7 @@
 #define motor_RL_EN 46
 #define motor_RR_EN 47
 
+#define rx_ready 45
 
 #define servo_arm_pin 9
 #define servo_claw_pin 8
@@ -16,8 +17,8 @@
 #define leftSensorPin 1
 #define rightSensorPin 2
 
-#define CLAW_MAX_OPEN 100
-#define CLAW_MAX_CLOSE 160 
+#define CLAW_MAX_OPEN 50
+#define CLAW_MAX_CLOSE 120 
 #define ARM_MAX_UP 10
 #define ARM_MAX_DOWN 60 
 
@@ -81,8 +82,8 @@ void runMotors(int16_t leftM, int16_t rightM)
   }
   else 
   {
-     analogWrite(motor_RPWM_R, abs(rightM));
-     analogWrite(motor_LPWM_R, 0);
+    analogWrite(motor_RPWM_R, abs(rightM));
+    analogWrite(motor_LPWM_R, 0);
   }
 }
 
@@ -107,7 +108,6 @@ void auto_mode()
   Serial.println(vRight);
 }
 
-
 void setup() {
   arm.attach(servo_arm_pin);
   claw.attach(servo_claw_pin);
@@ -116,6 +116,7 @@ void setup() {
   last_arm_angle = ARM_MAX_UP;
   last_claw_angle = CLAW_MAX_CLOSE;
 
+  pinMode(rx_ready, OUTPUT);
 
   pinMode(motor_RPWM_L, OUTPUT);
   pinMode(motor_LPWM_L, OUTPUT);
@@ -138,37 +139,41 @@ void setup() {
   Serial1.begin(115200);
   delay(1000);
   Serial1.flush();
+  digitalWrite(rx_ready, HIGH);
 }
 
 void loop() {
   
-  if (Serial1.available() >= 10) {
-    uint8_t buffer[10];
-    for (uint8_t i = 0; i < 10; i++)
+  if (Serial1.available() >= 8) {
+    digitalWrite(rx_Ready, LOW);
+    
+    uint8_t buffer[7];
+    for (uint8_t i = 0; i < 7; i++)
     {
       buffer[i] = Serial1.read();
-      Serial.print(buffer[i], DEC);
-      Serial.println();
     }
-
-      int16_t arm_command = (int16_t)buffer[5] << 8 | buffer[4];
-      int16_t claw_command = (int16_t)buffer[7] << 8 | buffer[6];
-      int16_t mode = (int16_t)buffer[9] << 8 | buffer[8];
     
-      int16_t leftM = (int16_t)buffer[1] << 8 | buffer[0];
-      int16_t rightM = (int16_t)buffer[3] << 8 | buffer[2];
-      if (mode == 1)
-      {
-        auto_mode();
-      }
-      else
-      {
-        runMotors(leftM, rightM);
-        servoControl(arm_command,claw_command); 
-        Serial.print(leftM, DEC);
-        Serial.write(' ');
-        Serial.println(rightM, DEC);
-      } 
-      
+    uint8_t arm_command = buffer[4];
+    uint8_t claw_command = buffer[5];
+    int16_t mode = buffer[6];
+    
+    int16_t leftM = (int16_t)buffer[1] << 8 | buffer[0];
+    int16_t rightM = (int16_t)buffer[3] << 8 | buffer[2];
+    
+    digitalWrite(rx_ready, HIGH);
+    Serial1.flush();
+    
+    if (mode == 1)
+    {
+      auto_mode();
+    }
+    else
+    {
+      runMotors(leftM, rightM);
+      servoControl(arm_command,claw_command); 
+      // Serial.print(leftM, DEC);
+      // Serial.write(' ');
+      // Serial.println(rightM, DEC);
+    }
   }
 }

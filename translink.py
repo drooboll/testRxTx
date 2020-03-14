@@ -6,6 +6,7 @@ import gc
 
 uart = UART(0, 115200)
 pin = Pin(0, Pin.OUT)
+rx_ready = Pin(2, Pin.IN)
 
 ap = network.WLAN(network.AP_IF)
 ap.active(True)
@@ -18,15 +19,16 @@ sock.listen(1)
 
 def run():
 	while True:
-		pin.value(0)
+		pin.value(1)
 		client_sock, ip = sock.accept()
 		#print(ip)
-		pin.value(1)
+		pin.value(0)
 		while True:
-			data = client_sock.recv(10)
+			data = client_sock.recv(12)
 			if len(data):
-				uart.write(data)
-				gc.collect()
+				if rx_ready.value():
+					uart.write(data)
+					gc.collect()
 			else:
 				client_sock.close()
 				break

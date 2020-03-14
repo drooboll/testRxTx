@@ -8,8 +8,7 @@ import serial
 import struct
 import socket
 
-k1 = 222 # Max motor speed
-k2 = 200
+max_motor_speed = 200
 
 STOP = 0
 DOWN = 1
@@ -88,19 +87,17 @@ while True:
 
 	x = ctrl.get_axis(0)
 	y = ctrl.get_axis(1)
-	if abs(x) < 1e-4:
-		x = 0
-	if abs(y) < 1e-4:
-		y = 0
-	re = (-h(x, y)-g(x, y))*k2/2 #райт энжин
-	le = (h(x, y)-g(x, y))*k2/2 #лефт энжин
+
+	right_motor = round((-h(x, y)-g(x, y)) * max_motor_speed/ 2)
+	left_motor = round((h(x, y)-g(x, y)) * max_motor_speed / 2)
 	
-	print("R = {}".format(int(re)))
-	print("L = {}".format(int(le)))
-	b = bytearray(struct.pack("hhhhh", int(le), int(re), arm_command, claw_command, auto_mode))
+	print("R = ", int(right_motor))
+	print("L = ", int(left_motor))
+
+	data = bytearray(struct.pack("hhbbb", int(left_motor), int(right_motor), arm_command, claw_command, auto_mode))
 	print(b)
 	if using_tcp:
-		dst.send(b)
+		dst.send(data)
 	else:
-		dst.write(b)
-	time.sleep(0.08)
+		dst.write(data)
+	time.sleep(0.1)
